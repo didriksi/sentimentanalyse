@@ -220,3 +220,7 @@ $RECYCLE.BIN/
 
 # Virtual environment
 sentiment_virt/*
+env/*
+
+# Huge model files
+*.bin
