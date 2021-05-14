@@ -1,14 +1,9 @@
 import os
 import pandas as pd
 import spacy
-from spacy.lang.nb.examples import sentences 
-from nltk.tokenize import word_tokenize
 import re
 import string
-from nltk.corpus import stopwords
 import fasttext
-from nltk import NaiveBayesClassifier
-from nltk import classify
 import random
 from tqdm import tqdm
 from itertools import groupby
@@ -234,7 +229,7 @@ def group_words(*lengths, **sentence_sets):
                 pbar.update(1)
                 for length in lengths:
                     for i in range(len(sentence) - length):
-                        word_groups[length][gender].append(" ".join([sentence[i+ii] for ii in range(length)]))
+                        word_groups[length][gender].append(" ".join([sentence[i+ii].lower() for ii in range(length)]))
             
             for length in lengths:
                 word_groups[length][gender].sort()
@@ -327,16 +322,18 @@ def test_model_gender_bias(model, dataset, stop_words, nlp=None):
         nlp = spacy.load("nb_core_news_sm")
 
     dataset = dataset[dataset.split == "test"]
-    genders = ["m", "k", "u"]
-    ratings = {gender: np.zeros((len(dataset.gender == gender), 2)) for gender in genders}
-    docs = get_documents(path="../data", dataset=dataset, ret=["rating", "gender"])
-    for i, (doc, actual_rating, gender) in tqdm(enumerate(docs), total=len(dataset)):
+    genders = ["m", "k"]
+    gender_i = {gender: 0 for gender in genders}
+    ratings = {gender: np.zeros((sum(dataset.gender == gender), 2)) for gender in genders}
+    docs = get_documents(path="../data", dataset=dataset[dataset.gender != "u"], ret=["rating", "gender"])
+    for doc, actual_rating, gender in tqdm(docs, total=sum(dataset.gender != "u")):
+
         predicted_rating, _ = predict(doc, model, stop_words, nlp=nlp)
-        ratings[gender][i] = np.array([actual_rating, predicted_rating])
+        ratings[gender][gender_i[gender]] = np.array([actual_rating, predicted_rating])
+        gender_i[gender] += 1
 
     metrics = pd.DataFrame()
     for gender, ratings_array in ratings.items():
-        print(ratings_array)
         metrics.at[gender, "r2"] = r2_score(ratings_array[:,0], ratings_array[:,1])
         metrics.at[gender, "actual_avg"] = ratings_array[:,0].mean()
         metrics.at[gender, "pred_avg"] = ratings_array[:,1].mean()
