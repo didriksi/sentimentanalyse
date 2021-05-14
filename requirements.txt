@@ -38,8 +38,6 @@ MarkupSafe==1.1.1
 matplotlib-inline==0.1.2
 mistune==0.8.4
 murmurhash==1.0.5
-nb-core-news-lg @ https://github.com/explosion/spacy-models/releases/download/nb_core_news_lg-3.0.0/nb_core_news_lg-3.0.0-py3-none-any.whl
-nb-core-news-sm @ https://github.com/explosion/spacy-models/releases/download/nb_core_news_sm-3.0.0/nb_core_news_sm-3.0.0-py3-none-any.whl
 nbclassic==0.2.7
 nbclient==0.5.3
 nbconvert==6.0.7
