@@ -135,15 +135,17 @@ def get_documents(dataset=None, path="data", ret=["rating", "authors"]):
         document = open(f"{path}/{review['split']}/{str(review['id']).zfill(6)}.txt", "r").read()
         yield (document, *[review[col] for col in ret])
 
-def make_processed_datasets(dataset, stop_words, nlp=None, debug=False):
+def make_processed_datasets(dataset, stop_words, path="data", nlp=None):
     """Make fasttext-style dataset, with each line being a text.
     
-    :param stop_words: List of stop words.
-    :param debug: Set to true to only process first doc.
     :param dataset: pd.DataFrame of the metadata format
+    :param stop_words: List of stop words.
+    :param path: Path to data folder. [data]
+    :param nlp: Spacy nlp object.
     
-    Create files `../data/processed/<kwarg_key>.txt`, with each line
-    being on the form `__label__<1-6> <a document, without linebreaks>.
+    Create files `<path>/processed/<kwarg_key>.txt`, with each line
+    being on the form `__label__<1-6> <a document, without linebreaks>, 
+    and a pickled dictionary with texts written by each gender, split into sentences.
     
     :return: None
     """
@@ -175,17 +177,17 @@ def make_processed_datasets(dataset, stop_words, nlp=None, debug=False):
             sentence_set[gender].append(sentence_list)
         
         fasttext_set[split].append(f"__label__{rating} {''.join(fasttext_list)}\n")
-        
-        if debug:
-            return fasttext_set, sentence_set
     
+    if not os.path.exists(f"{path}/processed/"):
+        os.makedirs(f"{path}/processed/")
+
     for split, text_list in fasttext_set.items():
         random.shuffle(text_list)
     
-        with open(f"data/processed/{split}.txt", "w") as file:
+        with open(f"{path}/processed/{split}.txt", "w") as file:
             file.write("\n".join(text_list))
 
-    with open("data/sentence_sets.pkl", "wb") as handle:
+    with open(f"{path}/sentence_sets.pkl", "wb") as handle:
         pickle.dump(sentence_set, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def predict(doc, model, stop_words, nlp=None):
